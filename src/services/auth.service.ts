@@ -1,5 +1,6 @@
 import prisma from '../config/prisma';
 import AppError from '../types/app-error';
+import bcrypt from 'bcryptjs';
 
 interface CreateUserInput {
   fullname?: string;
@@ -22,11 +23,13 @@ export const createUser = async ({ fullname, username, password, createdBy }: Cr
     throw new AppError('Username already exists', 409);
   }
 
+  const hashedPassword = await bcrypt.hash(password.trim(), 10);
+
   const user = await prisma.user.create({
     data: {
       fullname: fullname?.trim() || null,
       username: trimmedUsername,
-      password: password.trim(),
+      password: hashedPassword,
       created_by: createdBy ?? null,
     },
   });
