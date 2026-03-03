@@ -9,13 +9,31 @@ datasource db {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model user {
-  id         Int    @id @default(autoincrement())
+  id         Int       @id @default(autoincrement())
   fullname   String?   @db.VarChar
   username   String?   @db.VarChar
   password   String?   @db.VarChar
   created_at DateTime  @default(now()) @db.Timestamptz(6)
-  created_by String    @db.VarChar 
+  created_by String?   @db.VarChar
   updated_at DateTime? @db.Timestamp(6)
   updated_by String?   @db.VarChar
-  active     Boolean?  @default(true)
+  deleted_at DateTime? @db.Timestamp(6)
+  deleted_by String?   @db.VarChar
+  isActive   Boolean?  @default(true)
+
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model project {
+  id           BigInt   @id @default(autoincrement())
+  project_name String?  @db.VarChar
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  created_by String?   @db.VarChar
+  updated_at DateTime? @db.Timestamp(6)
+  updated_by String?   @db.VarChar
+  deleted_at DateTime? @db.Timestamp(6)
+  deleted_by String?   @db.VarChar
+  isActive   Boolean?  @default(true)
+
 }

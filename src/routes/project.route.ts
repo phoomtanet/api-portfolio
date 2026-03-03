@@ -1,15 +1,15 @@
 import { Router } from 'express';
-import { createUser, deleteUser, getUser, getUsers, updateUser } from '../controllers/user.controller';
+import { createProject, deleteProject, getProject, getProjects, updateProject } from '../controllers/project.controller';
 
 const router = Router();
 
 /**
  * @openapi
- * /user:
+ * /project:
  *   get:
- *     summary: Get all users
+ *     summary: Get all projects
  *     tags:
- *       - Users
+ *       - Projects
  *     parameters:
  *       - in: query
  *         name: limit
@@ -20,26 +20,22 @@ const router = Router();
  *         schema:
  *           type: integer
  *       - in: query
- *         name: user_id
- *         schema:
- *           type: integer
- *       - in: query
  *         name: keyword
  *         schema:
  *           type: string
  *     responses:
  *       200:
- *         description: List of users
+ *         description: List of projects
  */
-router.get('/user', getUsers);
+router.get('/project', getProjects);
 
 /**
  * @openapi
- * /user/{id}:
+ * /project/{id}:
  *   get:
- *     summary: Get user by id
+ *     summary: Get project by id
  *     tags:
- *       - Users
+ *       - Projects
  *     parameters:
  *       - in: path
  *         name: id
@@ -48,21 +44,21 @@ router.get('/user', getUsers);
  *           type: integer
  *     responses:
  *       200:
- *         description: User found
+ *         description: Project found
  *       400:
  *         description: Invalid id
  *       404:
- *         description: User not found
+ *         description: Project not found
  */
-router.get('/user/:id', getUser);
+router.get('/project/:id', getProject);
 
 /**
  * @openapi
- * /user:
+ * /project:
  *   post:
- *     summary: Create a new user
+ *     summary: Create a new project
  *     tags:
- *       - Users
+ *       - Projects
  *     requestBody:
  *       required: true
  *       content:
@@ -70,36 +66,27 @@ router.get('/user/:id', getUser);
  *           schema:
  *             type: object
  *             required:
- *               - username
- *               - password
+ *               - project_name
  *             properties:
- *               fullname:
- *                 type: string
- *               username:
- *                 type: string
- *               password:
+ *               project_name:
  *                 type: string
  *               created_by:
  *                 type: string
- *               isActive:
- *                 type: boolean
  *     responses:
  *       201:
- *         description: User created
+ *         description: Project created
  *       400:
  *         description: Validation error
- *       409:
- *         description: Username already exists
  */
-router.post('/user', createUser);
+router.post('/project', createProject);
 
 /**
  * @openapi
- * /user/{id}:
+ * /project/{id}:
  *   put:
- *     summary: Update user (fullname / password / toggle isActive)
+ *     summary: Update project (project_name / toggle isActive)
  *     tags:
- *       - Users
+ *       - Projects
  *     parameters:
  *       - in: path
  *         name: id
@@ -112,9 +99,7 @@ router.post('/user', createUser);
  *           schema:
  *             type: object
  *             properties:
- *               fullname:
- *                 type: string
- *               password:
+ *               project_name:
  *                 type: string
  *               isActive:
  *                 type: boolean
@@ -122,21 +107,21 @@ router.post('/user', createUser);
  *                 type: string
  *     responses:
  *       200:
- *         description: User updated
+ *         description: Project updated
  *       400:
  *         description: Invalid id
  *       404:
- *         description: User not found
+ *         description: Project not found
  */
-router.put('/user/:id', updateUser);
+router.put('/project/:id', updateProject);
 
 /**
  * @openapi
- * /user/{id}:
+ * /project/{id}:
  *   delete:
- *     summary: Soft delete a user
+ *     summary: Soft delete a project
  *     tags:
- *       - Users
+ *       - Projects
  *     parameters:
  *       - in: path
  *         name: id
@@ -153,12 +138,12 @@ router.put('/user/:id', updateUser);
  *                 type: string
  *     responses:
  *       200:
- *         description: User deleted
+ *         description: Project deleted
  *       400:
  *         description: Invalid id
  *       404:
- *         description: User not found
+ *         description: Project not found
  */
-router.delete('/user/:id', deleteUser);
+router.delete('/project/:id', deleteProject);
 
 export default router;
