@@ -31,15 +31,17 @@ export const getProject = async (req: Request, res: Response, next: NextFunction
 
 export const createProject = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { project_name, created_by, isActive } = req.body as {
+    const { project_name, isActive } = req.body as {
       project_name: string;
-      created_by?: string;
       isActive?: boolean;
     };
 
     if (!project_name?.trim()) {
       throw new AppError('project_name is required', 400);
     }
+
+    // ดึง username จาก JWT token อัตโนมัติ
+    const created_by = req.user?.username;
 
     const project = await addProject({ project_name: project_name.trim(), created_by, isActive });
     res.status(201).json({ status: 'success', data: project });
@@ -55,11 +57,13 @@ export const updateProject = async (req: Request, res: Response, next: NextFunct
       throw new AppError('Invalid project id', 400);
     }
 
-    const { project_name, isActive, updated_by } = req.body as {
+    const { project_name, isActive } = req.body as {
       project_name?: string;
       isActive?: boolean;
-      updated_by?: string;
     };
+
+    // ดึง username จาก JWT token อัตโนมัติ
+    const updated_by = req.user?.username;
 
     const project = await editProject(Number(idParam), { project_name, isActive, updated_by });
     res.json({ status: 'success', data: project });
@@ -75,7 +79,8 @@ export const deleteProject = async (req: Request, res: Response, next: NextFunct
       throw new AppError('Invalid project id', 400);
     }
 
-    const { deleted_by } = req.body as { deleted_by?: string };
+    // ดึง username จาก JWT token อัตโนมัติ
+    const deleted_by = req.user?.username;
 
     await removeProject(Number(idParam), deleted_by);
     res.json({ status: 'success', message: 'Project deleted' });

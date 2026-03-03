@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { createProject, deleteProject, getProject, getProjects, updateProject } from '../controllers/project.controller';
+import { authenticate, optionalAuthenticate } from '../middlewares/auth.middleware';
 
 const router = Router();
 
@@ -7,7 +8,7 @@ const router = Router();
  * @openapi
  * /project:
  *   get:
- *     summary: Get all projects
+ *     summary: Get all projects (Guest allowed)
  *     tags:
  *       - Projects
  *     parameters:
@@ -27,13 +28,13 @@ const router = Router();
  *       200:
  *         description: List of projects
  */
-router.get('/project', getProjects);
+router.get('/project', optionalAuthenticate, getProjects);
 
 /**
  * @openapi
  * /project/{id}:
  *   get:
- *     summary: Get project by id
+ *     summary: Get project by id (Guest allowed)
  *     tags:
  *       - Projects
  *     parameters:
@@ -50,13 +51,15 @@ router.get('/project', getProjects);
  *       404:
  *         description: Project not found
  */
-router.get('/project/:id', getProject);
+router.get('/project/:id', optionalAuthenticate, getProject);
 
 /**
  * @openapi
  * /project:
  *   post:
- *     summary: Create a new project
+ *     summary: Create a new project (Auth required)
+ *     security:
+ *       - bearerAuth: []
  *     tags:
  *       - Projects
  *     requestBody:
@@ -70,21 +73,25 @@ router.get('/project/:id', getProject);
  *             properties:
  *               project_name:
  *                 type: string
- *               created_by:
- *                 type: string
+ *               isActive:
+ *                 type: boolean
  *     responses:
  *       201:
  *         description: Project created
  *       400:
  *         description: Validation error
+ *       401:
+ *         description: No token provided
  */
-router.post('/project', createProject);
+router.post('/project', authenticate, createProject);
 
 /**
  * @openapi
  * /project/{id}:
  *   put:
- *     summary: Update project (project_name / toggle isActive)
+ *     summary: Update project (Auth required)
+ *     security:
+ *       - bearerAuth: []
  *     tags:
  *       - Projects
  *     parameters:
@@ -103,23 +110,23 @@ router.post('/project', createProject);
  *                 type: string
  *               isActive:
  *                 type: boolean
- *               updated_by:
- *                 type: string
  *     responses:
  *       200:
  *         description: Project updated
- *       400:
- *         description: Invalid id
+ *       401:
+ *         description: No token provided
  *       404:
  *         description: Project not found
  */
-router.put('/project/:id', updateProject);
+router.put('/project/:id', authenticate, updateProject);
 
 /**
  * @openapi
  * /project/{id}:
  *   delete:
- *     summary: Soft delete a project
+ *     summary: Soft delete a project (Auth required)
+ *     security:
+ *       - bearerAuth: []
  *     tags:
  *       - Projects
  *     parameters:
@@ -128,22 +135,14 @@ router.put('/project/:id', updateProject);
  *         required: true
  *         schema:
  *           type: integer
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               deleted_by:
- *                 type: string
  *     responses:
  *       200:
  *         description: Project deleted
- *       400:
- *         description: Invalid id
+ *       401:
+ *         description: No token provided
  *       404:
  *         description: Project not found
  */
-router.delete('/project/:id', deleteProject);
+router.delete('/project/:id', authenticate, deleteProject);
 
 export default router;

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register } from '../controllers/auth.controller';
+import { login, register } from '../controllers/auth.controller';
 
 const router = Router();
 
@@ -24,6 +24,8 @@ const router = Router();
  *                 type: string
  *               username:
  *                 type: string
+ *               email:
+ *                 type: string
  *               password:
  *                 type: string
  *     responses:
@@ -32,8 +34,42 @@ const router = Router();
  *       400:
  *         description: Invalid input
  *       409:
- *         description: Username already exists
+ *         description: Username or email already exists
  */
 router.post('/register', register);
+
+/**
+ * @openapi
+ * /login:
+ *   post:
+ *     summary: Login with username or email and get JWT token
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - identifier
+ *               - password
+ *             properties:
+ *               identifier:
+ *                 type: string
+ *                 description: Username or email
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login success — returns token and user
+ *       400:
+ *         description: Missing fields
+ *       401:
+ *         description: Invalid credentials
+ *       403:
+ *         description: Account disabled
+ */
+router.post('/login', login);
 
 export default router;

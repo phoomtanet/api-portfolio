@@ -1,36 +1,40 @@
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import env from '../config/env';
 import prisma from '../config/prisma';
 import AppError from '../types/app-error';
-import bcrypt from 'bcryptjs';
 
-interface CreateUserInput {
+interface RegisterInput {
   fullname?: string;
   username: string;
+  email?: string;
   password: string;
   createdBy?: string;
 }
 
-export const createUser = async ({ fullname, username, password, createdBy }: CreateUserInput) => {
+export const createUser = async ({ fullname, username, email, password, createdBy }: RegisterInput) => {
   const trimmedUsername = username.trim();
-  if (!trimmedUsername) {
-    throw new AppError('username is required', 400);
-  }
-  if (!password?.trim()) {
-    throw new AppError('password is required', 400);
-  }
+  if (!trimmedUsername) throw new AppError('username is required', 400);
+  if (!password?.trim()) throw new AppError('password is required', 400);
 
-  const existing = await prisma.user.findFirst({ where: { username: trimmedUsername } });
-  if (existing) {
-    throw new AppError('Username already exists', 409);
+  const existing = await prisma.user.findFirst({ where: { username: trimmedUsername, deleted_at: null } });
+  if (existing) throw new AppError('Username already exists', 409);
+
+  if (email?.trim()) {
+    const emailTaken = await prisma.user.findFirst({ where: { email: email.trim(), deleted_at: null } });
+    if (emailTaken) throw new AppError('Email already in use', 409);
   }
 
   const hashedPassword = await bcrypt.hash(password.trim(), 10);
 
   const user = await prisma.user.create({
     data: {
-      fullname: fullname?.trim() || null,
+      fullname: fullname?.trim() ?? null,
       username: trimmedUsername,
+      email: email?.trim() ?? null,
       password: hashedPassword,
       created_by: createdBy ?? null,
+      isActive: true,
     },
   });
 
@@ -38,7 +42,46 @@ export const createUser = async ({ fullname, username, password, createdBy }: Cr
     id: user.id,
     fullname: user.fullname,
     username: user.username,
+    email: user.email,
     created_at: user.created_at,
-    active: user.active,
+    isActive: user.isActive,
+  };
+};
+
+export const loginUser = async (identifier: string, password: string) => {
+  const trimmed = identifier.trim();
+
+  const user = await prisma.user.findFirst({
+    where: {
+      deleted_at: null,
+      OR: [{ username: trimmed }, { email: trimmed }],
+    },
+  });
+
+  if (!user || !user.password) {
+    throw new AppError('Invalid username/email or password', 401);
+  }
+
+  if (!user.isActive) {
+    throw new AppError('Account is disabled', 403);
+  }
+
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) {
+    throw new AppError('Invalid username/email or password', 401);
+  }
+
+  const payload = { sub: user.id, username: user.username };
+  const token = jwt.sign(payload, env.jwtSecret, { expiresIn: env.jwtExpiresIn } as jwt.SignOptions);
+
+  return {
+    token,
+    user: {
+      id: user.id,
+      fullname: user.fullname,
+      username: user.username,
+      email: user.email,
+      isActive: user.isActive,
+    },
   };
 };
