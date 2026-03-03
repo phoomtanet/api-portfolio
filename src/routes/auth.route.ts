@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { login, register } from '../controllers/auth.controller';
+import { login, logout, register } from '../controllers/auth.controller';
+import { authenticate } from '../middlewares/auth.middleware';
 
 const router = Router();
 
@@ -71,5 +72,22 @@ router.post('/register', register);
  *         description: Account disabled
  */
 router.post('/login', login);
+
+/**
+ * @openapi
+ * /logout:
+ *   post:
+ *     summary: Logout and invalidate the current session
+ *     tags:
+ *       - Auth
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logged out successfully
+ *       401:
+ *         description: No token provided
+ */
+router.post('/logout', authenticate, logout);
 
 export default router;

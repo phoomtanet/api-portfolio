@@ -9,19 +9,47 @@ datasource db {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model user {
-  id         Int       @id @default(autoincrement())
-  fullname   String?   @db.VarChar
-  username   String?   @db.VarChar
-  email      String?   @db.VarChar
-  password   String?   @db.VarChar
-  created_at DateTime  @default(now()) @db.Timestamptz(6)
-  created_by String?   @db.VarChar
-  updated_at DateTime? @db.Timestamp(6)
-  updated_by String?   @db.VarChar
-  deleted_at DateTime? @db.Timestamp(6)
-  deleted_by String?   @db.VarChar
-  isActive   Boolean?  @default(true)
+  id         Int            @id @default(autoincrement())
+  fullname   String?        @db.VarChar
+  username   String?        @db.VarChar
+  email      String?        @db.VarChar
+  password   String?        @db.VarChar
+  created_at DateTime       @default(now()) @db.Timestamptz(6)
+  created_by String?        @db.VarChar
+  updated_at DateTime?      @db.Timestamp(6)
+  updated_by String?        @db.VarChar
+  deleted_at DateTime?      @db.Timestamp(6)
+  deleted_by String?        @db.VarChar
+  isActive   Boolean?       @default(true)
+  sessions   user_session[]
+}
 
+/// บันทึก session การเข้าใช้งานของผู้ใช้แต่ละครั้ง
+model user_session {
+  id               BigInt    @id @default(autoincrement())
+  user_id          Int
+  /// SHA-256 ของ JWT token — ใช้ตรวจสอบหรือ revoke session
+  token_hash       String    @db.VarChar(64)
+  /// IP ของผู้ใช้ขณะ login (รองรับ IPv4 และ IPv6)
+  ip_address       String?   @db.VarChar(45)
+  /// User-Agent string — browser / OS / device
+  user_agent       String?   @db.Text
+  /// เวลาที่ login
+  login_at         DateTime  @default(now()) @db.Timestamptz(6)
+  /// เวลาที่เรียก API ล่าสุด
+  last_activity_at DateTime? @db.Timestamptz(6)
+  /// เวลาที่ logout (null = ยังเป็น active session)
+  logout_at        DateTime? @db.Timestamptz(6)
+  /// เวลาที่ token หมดอายุ
+  expires_at       DateTime  @db.Timestamptz(6)
+  /// false เมื่อ logout หรือ token หมดอายุ
+  is_active        Boolean   @default(true)
+
+  user             user      @relation(fields: [user_id], references: [id])
+
+  @@index([user_id])
+  @@index([token_hash])
+  @@index([is_active, expires_at])
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments

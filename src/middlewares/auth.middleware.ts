@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import env from '../config/env';
+import { hashToken, touchSession } from '../services/auth.service';
 import AppError from '../types/app-error';
 
 export interface JwtPayload {
@@ -32,6 +33,8 @@ export const authenticate = (req: Request, _res: Response, next: NextFunction) =
   try {
     const payload = jwt.verify(token, env.jwtSecret) as unknown as JwtPayload;
     req.user = payload;
+    // อัปเดต last_activity_at แบบ fire-and-forget
+    touchSession(hashToken(token));
     next();
   } catch {
     next(new AppError('Invalid or expired token', 401));
@@ -51,6 +54,8 @@ export const optionalAuthenticate = (req: Request, _res: Response, next: NextFun
   try {
     const payload = jwt.verify(token, env.jwtSecret) as unknown as JwtPayload;
     req.user = payload;
+    // อัปเดต last_activity_at แบบ fire-and-forget
+    touchSession(hashToken(token));
   } catch {
     // token ผิด/หมดอายุ — ถือว่า Guest แทนที่จะ block
   }
