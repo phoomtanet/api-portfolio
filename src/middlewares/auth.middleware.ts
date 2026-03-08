@@ -7,6 +7,7 @@ import AppError from '../types/app-error';
 export interface JwtPayload {
   sub: number;
   username: string;
+  isAdmin: boolean;
   iat: number;
   exp: number;
 }

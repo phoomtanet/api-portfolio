@@ -31,9 +31,9 @@ export const getProject = async (req: Request, res: Response, next: NextFunction
 
 export const createProject = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { project_name, isActive } = req.body as {
+    const { project_name, is_active } = req.body as {
       project_name: string;
-      isActive?: boolean;
+      is_active?: boolean;
     };
 
     if (!project_name?.trim()) {
@@ -43,7 +43,7 @@ export const createProject = async (req: Request, res: Response, next: NextFunct
     // ดึง username จาก JWT token อัตโนมัติ
     const created_by = req.user?.username;
 
-    const project = await addProject({ project_name: project_name.trim(), created_by, isActive });
+    const project = await addProject({ project_name: project_name.trim(), created_by, is_active });
     res.status(201).json({ status: 'success', data: project });
   } catch (error) {
     next(error);
@@ -57,15 +57,15 @@ export const updateProject = async (req: Request, res: Response, next: NextFunct
       throw new AppError('Invalid project id', 400);
     }
 
-    const { project_name, isActive } = req.body as {
+    const { project_name, is_active } = req.body as {
       project_name?: string;
-      isActive?: boolean;
+      is_active?: boolean;
     };
 
     // ดึง username จาก JWT token อัตโนมัติ
     const updated_by = req.user?.username;
 
-    const project = await editProject(Number(idParam), { project_name, isActive, updated_by });
+    const project = await editProject(Number(idParam), { project_name, is_active, updated_by });
     res.json({ status: 'success', data: project });
   } catch (error) {
     next(error);

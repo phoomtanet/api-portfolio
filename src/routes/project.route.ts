@@ -73,7 +73,7 @@ router.get('/project/:id', optionalAuthenticate, getProject);
  *             properties:
  *               project_name:
  *                 type: string
- *               isActive:
+ *               is_active:
  *                 type: boolean
  *     responses:
  *       201:
@@ -108,7 +108,7 @@ router.post('/project', authenticate, createProject);
  *             properties:
  *               project_name:
  *                 type: string
- *               isActive:
+ *               is_active:
  *                 type: boolean
  *     responses:
  *       200:

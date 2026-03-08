@@ -7,7 +7,7 @@ const userSelect = {
   id: true,
   fullname: true,
   username: true,
-  isActive: true,
+  is_active: true,
   created_at: true,
   created_by: true,
   updated_at: true,
@@ -65,7 +65,7 @@ export const addUser = async (data: {
   username: string;
   password: string;
   created_by?: string;
-  isActive?: boolean;
+  is_active?: boolean;
 }) => {
   const existing = await prisma.user.findFirst({ where: { username: data.username.trim(), ...notDeleted } });
   if (existing) {
@@ -81,17 +81,17 @@ export const addUser = async (data: {
       username: data.username.trim(),
       password: hashedPassword,
       created_by: data.created_by ?? null,
-      isActive: data.isActive ?? true,
+      is_active: data.is_active ?? true,
     },
   });
 
   return user;
 };
 
-/* ── Update (isActive ใช้เปิด/ปิด) ────────────────────────────────────── */
+/* ── Update (is_active ใช้เปิด/ปิด) ────────────────────────────────────── */
 export const editUser = async (
   id: number,
-  data: { fullname?: string; password?: string; isActive?: boolean; updated_by?: string },
+  data: { fullname?: string; password?: string; is_active?: boolean; updated_by?: string },
 ) => {
   const existing = await prisma.user.findFirst({ where: { id, ...notDeleted } });
 
@@ -105,7 +105,7 @@ export const editUser = async (
   };
 
   if (data.fullname !== undefined) updateData.fullname = data.fullname;
-  if (data.isActive !== undefined) updateData.isActive = data.isActive;
+  if (data.is_active !== undefined) updateData.is_active = data.is_active;
   if (data.password) updateData.password = await bcrypt.hash(data.password.trim(), 10);
 
   const user = await prisma.user.update({

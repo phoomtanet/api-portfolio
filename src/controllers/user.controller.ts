@@ -32,18 +32,18 @@ export const getUser = async (req: Request, res: Response, next: NextFunction) =
 
 export const createUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { fullname, username, password, created_by, isActive } = req.body as {
+    const { fullname, username, password, created_by, is_active } = req.body as {
       fullname?: string;
       username: string;
       password: string;
       created_by?: string;
-      isActive?: boolean;
+      is_active?: boolean;
     };
 
     if (!username?.trim()) throw new AppError('username is required', 400);
     if (!password?.trim()) throw new AppError('password is required', 400);
 
-    const user = await addUser({ fullname, username, password, created_by, isActive });
+    const user = await addUser({ fullname, username, password, created_by, is_active });
     res.status(201).json({ status: 'success', data: user });
   } catch (error) {
     next(error);
@@ -57,14 +57,14 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
       throw new AppError('Invalid user id', 400);
     }
 
-    const { fullname, password, isActive, updated_by } = req.body as {
+    const { fullname, password, is_active, updated_by } = req.body as {
       fullname?: string;
       password?: string;
-      isActive?: boolean;
+      is_active?: boolean;
       updated_by?: string;
     };
 
-    const user = await editUser(Number.parseInt(idParam, 10), { fullname, password, isActive, updated_by });
+    const user = await editUser(Number.parseInt(idParam, 10), { fullname, password, is_active, updated_by });
     res.json({ status: 'success', data: user });
   } catch (error) {
     next(error);

@@ -5,7 +5,7 @@ import AppError from '../types/app-error';
 type ProjectRow = {
   id: bigint;
   project_name: string | null;
-  isActive: boolean | null;
+  is_active: boolean | null;
   created_at: Date;
   created_by: string | null;
   updated_at: Date | null;
@@ -54,22 +54,22 @@ export const getProjectById = async (id: number) => {
 };
 
 /* ── Create ───────────────────────────────────────────────────────────── */
-export const addProject = async (data: { project_name: string; created_by?: string; isActive?: boolean }) => {
+export const addProject = async (data: { project_name: string; created_by?: string; is_active?: boolean }) => {
   const project = await prisma.project.create({
     data: {
       project_name: data.project_name,
       created_by: data.created_by ?? null,
-      isActive: data.isActive ?? true,
+      is_active: data.is_active ?? true,
     },
   });
 
   return serialize(project);
 };
 
-/* ── Update (isActive ใช้เปิด/ปิด) ────────────────────────────────────── */
+/* ── Update (is_active ใช้เปิด/ปิด) ────────────────────────────────────── */
 export const editProject = async (
   id: number,
-  data: { project_name?: string; isActive?: boolean; updated_by?: string },
+  data: { project_name?: string; is_active?: boolean; updated_by?: string },
 ) => {
   const existing = await prisma.project.findFirst({ where: { id: BigInt(id), ...notDeleted } });
 
@@ -81,7 +81,7 @@ export const editProject = async (
     where: { id: BigInt(id) },
     data: {
       ...(data.project_name !== undefined && { project_name: data.project_name }),
-      ...(data.isActive !== undefined && { isActive: data.isActive }),
+      ...(data.is_active !== undefined && { is_active: data.is_active }),
       updated_at: new Date(),
       updated_by: data.updated_by ?? null,
     },

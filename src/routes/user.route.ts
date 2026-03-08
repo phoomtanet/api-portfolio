@@ -81,7 +81,7 @@ router.get('/user/:id', getUser);
  *                 type: string
  *               created_by:
  *                 type: string
- *               isActive:
+ *               is_active:
  *                 type: boolean
  *     responses:
  *       201:
@@ -97,7 +97,7 @@ router.post('/user', createUser);
  * @openapi
  * /user/{id}:
  *   put:
- *     summary: Update user (fullname / password / toggle isActive)
+ *     summary: Update user (fullname / password / toggle is_active)
  *     tags:
  *       - Users
  *     parameters:
@@ -116,7 +116,7 @@ router.post('/user', createUser);
  *                 type: string
  *               password:
  *                 type: string
- *               isActive:
+ *               is_active:
  *                 type: boolean
  *               updated_by:
  *                 type: string

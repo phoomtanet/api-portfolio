@@ -20,8 +20,39 @@ model user {
   updated_by String?        @db.VarChar
   deleted_at DateTime?      @db.Timestamp(6)
   deleted_by String?        @db.VarChar
-  isActive   Boolean?       @default(true)
+  is_active  Boolean?       @default(true)
+  is_admin   Boolean?       @default(false)
   sessions   user_session[]
+  chat_rooms chat_room[]
+}
+
+/// ห้องแชต 1 ห้องต่อ 1 user
+model chat_room {
+  id         BigInt         @id @default(autoincrement())
+  room_key   String         @unique @db.VarChar(100)
+  username   String         @db.VarChar(100)
+  user_id    Int?
+  is_active  Boolean        @default(true)
+  created_at DateTime       @default(now()) @db.Timestamptz(6)
+  closed_at  DateTime?      @db.Timestamptz(6)
+  messages   chat_message[]
+  user       user?          @relation(fields: [user_id], references: [id])
+
+  @@index([is_active])
+}
+
+/// ข้อความในห้องแชต
+model chat_message {
+  id         BigInt    @id @default(autoincrement())
+  room_id    BigInt
+  sender     String    @db.VarChar(100)
+  is_admin   Boolean   @default(false)
+  content    String    @db.Text
+  is_read    Boolean   @default(false)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  room       chat_room @relation(fields: [room_id], references: [id])
+
+  @@index([room_id, created_at])
 }
 
 /// บันทึก session การเข้าใช้งานของผู้ใช้แต่ละครั้ง
@@ -63,6 +94,6 @@ model project {
   updated_by String?   @db.VarChar
   deleted_at DateTime? @db.Timestamp(6)
   deleted_by String?   @db.VarChar
-  isActive   Boolean?  @default(true)
+  is_active  Boolean?  @default(true)
 
 }

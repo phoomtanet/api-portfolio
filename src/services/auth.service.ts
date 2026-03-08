@@ -53,7 +53,7 @@ export const createUser = async ({ fullname, username, email, password, createdB
       email: email?.trim() ?? null,
       password: hashedPassword,
       created_by: createdBy ?? null,
-      isActive: true,
+      is_active: true,
     },
   });
 
@@ -63,7 +63,7 @@ export const createUser = async ({ fullname, username, email, password, createdB
     username: user.username,
     email: user.email,
     created_at: user.created_at,
-    isActive: user.isActive,
+    is_active: user.is_active,
   };
 };
 
@@ -81,7 +81,7 @@ export const loginUser = async (identifier: string, password: string, meta: Logi
     throw new AppError('Invalid username/email or password', 401);
   }
 
-  if (!user.isActive) {
+  if (!user.is_active) {
     throw new AppError('Account is disabled', 403);
   }
 
@@ -90,7 +90,7 @@ export const loginUser = async (identifier: string, password: string, meta: Logi
     throw new AppError('Invalid username/email or password', 401);
   }
 
-  const payload = { sub: user.id, username: user.username };
+  const payload = { sub: user.id, username: user.username, isAdmin: user.is_admin ?? false };
   const token = jwt.sign(payload, env.jwtSecret, { expiresIn: env.jwtExpiresIn } as jwt.SignOptions);
 
   const expiresAt = new Date(Date.now() + parseExpiry(env.jwtExpiresIn));
@@ -112,7 +112,7 @@ export const loginUser = async (identifier: string, password: string, meta: Logi
       fullname: user.fullname,
       username: user.username,
       email: user.email,
-      isActive: user.isActive,
+      is_active: user.is_active,
     },
   };
 };

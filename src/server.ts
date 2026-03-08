@@ -1,16 +1,22 @@
+import { createServer } from 'http';
 import app from './app';
 import env from './config/env';
 import prisma from './config/prisma';
+import { setupSocket } from './socket/chat.handler';
 
-const server = app.listen(env.port, () => {
+const httpServer = createServer(app);
+
+setupSocket(httpServer);
+
+const server = httpServer.listen(env.port, () => {
   console.log(`🚀 API running at http://localhost:${env.port}${env.apiPrefix}`);
   console.log(`📚 Swagger UI available at http://localhost:${env.port}/docs`);
+  console.log(`💬 WebSocket (chat) ready on port ${env.port}`);
 });
 
 const shutdown = async (signal: string) => {
   console.log(`\nReceived ${signal}. Shutting down gracefully...`);
 
-  // Stop accepting new connections
   await new Promise<void>((resolve) => {
     server.close(() => {
       console.log('HTTP server closed.');
@@ -18,7 +24,6 @@ const shutdown = async (signal: string) => {
     });
   });
 
-  // Disconnect Prisma
   try {
     await prisma.$disconnect();
     console.log('Prisma disconnected.');
