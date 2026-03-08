@@ -69,9 +69,11 @@ router.get('/project/:id', optionalAuthenticate, getProject);
  *           schema:
  *             type: object
  *             required:
- *               - project_name
+ *               - project_name_th
  *             properties:
- *               project_name:
+ *               project_name_th:
+ *                 type: string
+ *               project_name_en:
  *                 type: string
  *               is_active:
  *                 type: boolean
@@ -106,7 +108,9 @@ router.post('/project', authenticate, createProject);
  *           schema:
  *             type: object
  *             properties:
- *               project_name:
+ *               project_name_th:
+ *                 type: string
+ *               project_name_en:
  *                 type: string
  *               is_active:
  *                 type: boolean

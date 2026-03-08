@@ -3,9 +3,18 @@ import jwt from 'jsonwebtoken';
 import { Server, Socket } from 'socket.io';
 import env from '../config/env';
 import prisma from '../config/prisma';
+import { deleteFile } from '../services/upload.service';
 import { JwtPayload } from '../middlewares/auth.middleware';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
+
+function truncateFileName(name: string, max = 100): string {
+  if (name.length <= max) return name;
+  const dot = name.lastIndexOf('.');
+  if (dot === -1) return name.slice(0, max);
+  const ext = name.slice(dot);
+  return name.slice(0, max - ext.length) + ext;
+}
 
 function serializeMsg(m: {
   id: bigint;
@@ -13,6 +22,8 @@ function serializeMsg(m: {
   sender: string;
   is_admin: boolean;
   content: string;
+  file_url: string | null;
+  file_name: string | null;
   is_read: boolean;
   created_at: Date;
 }) {
@@ -22,6 +33,8 @@ function serializeMsg(m: {
     sender: m.sender,
     isAdmin: m.is_admin,
     content: m.content,
+    fileUrl: m.file_url ?? null,
+    fileName: m.file_name ?? null,
     isRead: m.is_read,
     createdAt: m.created_at,
   };
@@ -86,7 +99,7 @@ export function setupSocket(httpServer: http.Server) {
 
       // send history
       const msgs = await prisma.chat_message.findMany({
-        where: { room_id: room.id },
+        where: { room_id: room.id, is_active: true },
         orderBy: { created_at: 'asc' },
         take: 100,
       });
@@ -107,8 +120,8 @@ export function setupSocket(httpServer: http.Server) {
       const rooms = await prisma.chat_room.findMany({
         where: { is_active: true, NOT: { user: { is_admin: true } } },
         include: {
-          messages: { orderBy: { created_at: 'desc' }, take: 1 },
-          _count: { select: { messages: { where: { is_read: false, is_admin: false } } } },
+          messages: { where: { is_active: true }, orderBy: { created_at: 'desc' }, take: 1 },
+          _count: { select: { messages: { where: { is_read: false, is_admin: false, is_active: true } } } },
         },
         orderBy: { created_at: 'desc' },
       });
@@ -141,7 +154,7 @@ export function setupSocket(httpServer: http.Server) {
       io.to('admins').emit('room_read', { roomKey });
 
       const msgs = await prisma.chat_message.findMany({
-        where: { room_id: room.id },
+        where: { room_id: room.id, is_active: true },
         orderBy: { created_at: 'asc' },
       });
       socket.emit('room_history', { roomKey, messages: msgs.map(serializeMsg) });
@@ -155,8 +168,9 @@ export function setupSocket(httpServer: http.Server) {
     // ── SEND MESSAGE (user or admin) ─────────────────────────────────────────
     socket.on(
       'send_message',
-      async ({ roomKey, content }: { roomKey: string; content: string }) => {
-        if (!me || !content?.trim()) return;
+      async ({ roomKey, content, fileUrl, fileName }: { roomKey: string; content: string; fileUrl?: string; fileName?: string }) => {
+        const trimmed = content?.trim() ?? '';
+        if (!me || (!trimmed && !fileUrl)) return;
 
         const room = await prisma.chat_room.findFirst({
           where: { room_key: roomKey, is_active: true },
@@ -177,7 +191,9 @@ export function setupSocket(httpServer: http.Server) {
             room_id: room.id,
             sender: me.username,
             is_admin: me.isAdmin ?? false,
-            content: content.trim(),
+            content: trimmed,
+            file_url: fileUrl ?? null,
+            file_name: fileName ? truncateFileName(fileName) : null,
           },
         });
 
@@ -190,6 +206,49 @@ export function setupSocket(httpServer: http.Server) {
         if (!me.isAdmin) {
           io.to('admins').emit('room_new_message', { ...payload, roomKey });
         }
+      }
+    );
+
+    socket.on(
+      'delete_message',
+      async ({ roomKey, messageId }: { roomKey: string; messageId: string }) => {
+        if (!me || !roomKey || !messageId || !/^\d+$/.test(messageId)) return;
+
+        const room = await prisma.chat_room.findFirst({ where: { room_key: roomKey, is_active: true } });
+        if (!room) return;
+
+        const message = await prisma.chat_message.findFirst({
+          where: { id: BigInt(messageId), room_id: room.id },
+        });
+        if (!message || message.sender !== me.username) return;
+
+        await prisma.chat_message.update({
+          where: { id: message.id },
+          data: { is_active: false },
+        });
+
+        // ลบไฟล์จาก S3 ถ้ามี
+        if (message.file_url) {
+          const marker = `/object/public/${env.s3.bucket}/`;
+          const idx = message.file_url.indexOf(marker);
+          if (idx !== -1) {
+            const key = message.file_url.slice(idx + marker.length);
+            deleteFile(key).catch(() => {});
+          }
+        }
+
+        const latest = await prisma.chat_message.findFirst({
+          where: { room_id: room.id, is_active: true },
+          orderBy: { created_at: 'desc' },
+        });
+
+        const lastMessage = latest
+          ? { sender: latest.sender, content: latest.content, createdAt: latest.created_at }
+          : null;
+
+        const payload = { messageId: message.id.toString(), roomKey, lastMessage };
+        io.to(`room:${roomKey}`).emit('message_deleted', payload);
+        io.to('admins').emit('message_deleted', payload);
       }
     );
   });

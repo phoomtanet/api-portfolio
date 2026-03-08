@@ -4,7 +4,8 @@ import AppError from '../types/app-error';
 
 type ProjectRow = {
   id: bigint;
-  project_name: string | null;
+  project_name_th: string | null;
+  project_name_en: string | null;
   is_active: boolean | null;
   created_at: Date;
   created_by: string | null;
@@ -23,8 +24,9 @@ const notDeleted: Prisma.projectWhereInput = { deleted_at: null };
 export const listProjects = async (limit: number, offset: number, keyword?: string) => {
   const where: Prisma.projectWhereInput = { ...notDeleted };
 
-  if (keyword) {
-    where.project_name = { contains: keyword };
+  if (keyword?.trim()) {
+    const like = { contains: keyword.trim(), mode: 'insensitive' as const };
+    where.OR = [{ project_name_th: like }, { project_name_en: like }];
   }
 
   const [total, projects] = await prisma.$transaction([
@@ -54,10 +56,16 @@ export const getProjectById = async (id: number) => {
 };
 
 /* ── Create ───────────────────────────────────────────────────────────── */
-export const addProject = async (data: { project_name: string; created_by?: string; is_active?: boolean }) => {
+export const addProject = async (data: {
+  project_name_th: string;
+  project_name_en?: string;
+  created_by?: string;
+  is_active?: boolean;
+}) => {
   const project = await prisma.project.create({
     data: {
-      project_name: data.project_name,
+      project_name_th: data.project_name_th,
+      project_name_en: data.project_name_en ?? null,
       created_by: data.created_by ?? null,
       is_active: data.is_active ?? true,
     },
@@ -69,7 +77,7 @@ export const addProject = async (data: { project_name: string; created_by?: stri
 /* ── Update (is_active ใช้เปิด/ปิด) ────────────────────────────────────── */
 export const editProject = async (
   id: number,
-  data: { project_name?: string; is_active?: boolean; updated_by?: string },
+  data: { project_name_th?: string; project_name_en?: string; is_active?: boolean; updated_by?: string },
 ) => {
   const existing = await prisma.project.findFirst({ where: { id: BigInt(id), ...notDeleted } });
 
@@ -80,7 +88,8 @@ export const editProject = async (
   const project = await prisma.project.update({
     where: { id: BigInt(id) },
     data: {
-      ...(data.project_name !== undefined && { project_name: data.project_name }),
+      ...(data.project_name_th !== undefined && { project_name_th: data.project_name_th }),
+      ...(data.project_name_en !== undefined && { project_name_en: data.project_name_en }),
       ...(data.is_active !== undefined && { is_active: data.is_active }),
       updated_at: new Date(),
       updated_by: data.updated_by ?? null,

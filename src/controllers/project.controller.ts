@@ -31,19 +31,25 @@ export const getProject = async (req: Request, res: Response, next: NextFunction
 
 export const createProject = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { project_name, is_active } = req.body as {
-      project_name: string;
+    const { project_name_th, project_name_en, is_active } = req.body as {
+      project_name_th: string;
+      project_name_en?: string;
       is_active?: boolean;
     };
 
-    if (!project_name?.trim()) {
-      throw new AppError('project_name is required', 400);
+    if (!project_name_th?.trim()) {
+      throw new AppError('project_name_th is required', 400);
     }
 
     // ดึง username จาก JWT token อัตโนมัติ
     const created_by = req.user?.username;
 
-    const project = await addProject({ project_name: project_name.trim(), created_by, is_active });
+    const project = await addProject({
+      project_name_th: project_name_th.trim(),
+      project_name_en: project_name_en?.trim(),
+      created_by,
+      is_active,
+    });
     res.status(201).json({ status: 'success', data: project });
   } catch (error) {
     next(error);
@@ -57,15 +63,21 @@ export const updateProject = async (req: Request, res: Response, next: NextFunct
       throw new AppError('Invalid project id', 400);
     }
 
-    const { project_name, is_active } = req.body as {
-      project_name?: string;
+    const { project_name_th, project_name_en, is_active } = req.body as {
+      project_name_th?: string;
+      project_name_en?: string;
       is_active?: boolean;
     };
 
     // ดึง username จาก JWT token อัตโนมัติ
     const updated_by = req.user?.username;
 
-    const project = await editProject(Number(idParam), { project_name, is_active, updated_by });
+    const project = await editProject(Number(idParam), {
+      project_name_th: project_name_th?.trim(),
+      project_name_en: project_name_en?.trim(),
+      is_active,
+      updated_by,
+    });
     res.json({ status: 'success', data: project });
   } catch (error) {
     next(error);
