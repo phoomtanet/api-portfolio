@@ -26,6 +26,7 @@ function serializeMsg(m: {
   file_name: string | null;
   is_read: boolean;
   created_at: Date;
+  updated_at: Date | null;
 }) {
   return {
     id: m.id.toString(),
@@ -37,6 +38,7 @@ function serializeMsg(m: {
     fileName: m.file_name ?? null,
     isRead: m.is_read,
     createdAt: m.created_at,
+    updatedAt: m.updated_at ?? null,
   };
 }
 
@@ -194,6 +196,7 @@ export function setupSocket(httpServer: http.Server) {
             content: trimmed,
             file_url: fileUrl ?? null,
             file_name: fileName ? truncateFileName(fileName) : null,
+            created_by: me.username,
           },
         });
 
@@ -224,7 +227,7 @@ export function setupSocket(httpServer: http.Server) {
 
         await prisma.chat_message.update({
           where: { id: message.id },
-          data: { is_active: false },
+          data: { is_active: false, deleted_at: new Date(), deleted_by: me.username },
         });
 
         // ลบไฟล์จาก S3 ถ้ามี
@@ -249,6 +252,33 @@ export function setupSocket(httpServer: http.Server) {
         const payload = { messageId: message.id.toString(), roomKey, lastMessage };
         io.to(`room:${roomKey}`).emit('message_deleted', payload);
         io.to('admins').emit('message_deleted', payload);
+      }
+    );
+
+    // ── EDIT MESSAGE ─────────────────────────────────────────────────────────
+    socket.on(
+      'edit_message',
+      async ({ roomKey, messageId, content }: { roomKey: string; messageId: string; content: string }) => {
+        if (!me || !roomKey || !messageId || !/^\d+$/.test(messageId)) return;
+        const trimmed = content?.trim();
+        if (!trimmed) return;
+
+        const room = await prisma.chat_room.findFirst({ where: { room_key: roomKey, is_active: true } });
+        if (!room) return;
+
+        const message = await prisma.chat_message.findFirst({
+          where: { id: BigInt(messageId), room_id: room.id, is_active: true },
+        });
+        if (!message || message.sender !== me.username || message.file_url) return;
+
+        await prisma.chat_message.update({
+          where: { id: message.id },
+          data: { content: trimmed, updated_at: new Date(), updated_by: me.username },
+        });
+
+        const payload = { messageId: message.id.toString(), roomKey, content: trimmed };
+        io.to(`room:${roomKey}`).emit('message_edited', payload);
+        io.to('admins').emit('message_edited', payload);
       }
     );
   });
