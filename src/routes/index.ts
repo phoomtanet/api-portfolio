@@ -7,6 +7,14 @@ import uploadRoute from './upload.route';
 
 const router = Router();
 
+router.get('/', (_req, res) => {
+  res.json({
+    status: 'ok',
+    developer: 'phoomtanet',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 router.use(healthRoute);
 router.use(authRoute);
 router.use(userRoute);
