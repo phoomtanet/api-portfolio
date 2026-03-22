@@ -8,6 +8,15 @@ const httpServer = createServer(app);
 
 setupSocket(httpServer);
 
+httpServer.on('request', (req) => {
+  if (!req.url || !req.method) return;
+  const normalizedUrl = req.url.split('?')[0];
+  if (normalizedUrl === `${env.apiPrefix}/health` && req.method === 'GET') {
+    const peer = req.socket.remoteAddress ?? 'unknown';
+    console.log(`[Health] ${peer} ${req.method} ${normalizedUrl}`);
+  }
+});
+
 const server = httpServer.listen(env.port, () => {
   console.log(`🚀 API running at http://localhost:${env.port}${env.apiPrefix}`);
   console.log(`📚 Swagger UI available at http://localhost:${env.port}/docs`);
