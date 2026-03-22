@@ -10,6 +10,7 @@ const router = Router();
 router.get('/', (_req, res) => {
   res.json({
     status: 'ok',
+    description: 'Portfolio REST API',
     developer: 'phoomtanet',
     timestamp: new Date().toISOString(),
   });
