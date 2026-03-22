@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { addProject, editProject, getProjectById, listProjects, removeProject } from '../services/project.service';
 import AppError from '../types/app-error';
+import { sendList, sendMessage, sendSuccess } from '../utils/response';
 
 export const getProjects = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -9,7 +10,7 @@ export const getProjects = async (req: Request, res: Response, next: NextFunctio
     const keyword = req.query.keyword as string;
 
     const result = await listProjects(limit, offset, keyword);
-    res.json({ status: 'success', ...result });
+    sendList(res, result);
   } catch (error) {
     next(error);
   }
@@ -23,7 +24,7 @@ export const getProject = async (req: Request, res: Response, next: NextFunction
     }
 
     const project = await getProjectById(Number(idParam));
-    res.json({ status: 'success', data: project });
+    sendSuccess(res, project);
   } catch (error) {
     next(error);
   }
@@ -41,7 +42,6 @@ export const createProject = async (req: Request, res: Response, next: NextFunct
       throw new AppError('project_name_th is required', 400);
     }
 
-    // ดึง username จาก JWT token อัตโนมัติ
     const created_by = req.user?.username;
 
     const project = await addProject({
@@ -50,7 +50,7 @@ export const createProject = async (req: Request, res: Response, next: NextFunct
       created_by,
       is_active,
     });
-    res.status(201).json({ status: 'success', data: project });
+    sendSuccess(res, project, 201);
   } catch (error) {
     next(error);
   }
@@ -69,7 +69,6 @@ export const updateProject = async (req: Request, res: Response, next: NextFunct
       is_active?: boolean;
     };
 
-    // ดึง username จาก JWT token อัตโนมัติ
     const updated_by = req.user?.username;
 
     const project = await editProject(Number(idParam), {
@@ -78,7 +77,7 @@ export const updateProject = async (req: Request, res: Response, next: NextFunct
       is_active,
       updated_by,
     });
-    res.json({ status: 'success', data: project });
+    sendSuccess(res, project);
   } catch (error) {
     next(error);
   }
@@ -91,11 +90,10 @@ export const deleteProject = async (req: Request, res: Response, next: NextFunct
       throw new AppError('Invalid project id', 400);
     }
 
-    // ดึง username จาก JWT token อัตโนมัติ
     const deleted_by = req.user?.username;
 
     await removeProject(Number(idParam), deleted_by);
-    res.json({ status: 'success', message: 'Project deleted' });
+    sendMessage(res, 'Project deleted');
   } catch (error) {
     next(error);
   }

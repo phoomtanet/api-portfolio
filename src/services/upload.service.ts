@@ -35,7 +35,8 @@ export async function uploadFile(
         ContentLength: file.size,
       })
     );
-  } catch {
+  } catch (err) {
+    console.error('[upload] S3 PutObject error:', err);
     throw new AppError('อัปโหลดไฟล์ไม่สำเร็จ', 500);
   }
 

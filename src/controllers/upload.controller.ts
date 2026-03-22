@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { uploadFile } from '../services/upload.service';
+import { sendError, sendSuccess } from '../utils/response';
 
 export async function uploadFileHandler(
   req: Request,
@@ -8,14 +9,14 @@ export async function uploadFileHandler(
 ): Promise<void> {
   try {
     if (!req.file) {
-      res.status(400).json({ status: 'error', message: 'ไม่พบไฟล์ที่อัปโหลด' });
+      sendError(res, 'ไม่พบไฟล์ที่อัปโหลด', 400);
       return;
     }
 
     const folder = (req.query.folder as string) || 'chat';
     const result = await uploadFile(req.file, folder);
 
-    res.json({ status: 'success', data: result });
+    sendSuccess(res, result);
   } catch (error) {
     next(error);
   }

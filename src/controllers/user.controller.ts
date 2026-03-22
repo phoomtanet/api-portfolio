@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { addUser, editUser, getUserById, listUsers, removeUser } from '../services/user.service';
 import AppError from '../types/app-error';
+import { sendList, sendMessage, sendSuccess } from '../utils/response';
 
 export const getUsers = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -10,7 +11,7 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
     const keyword = req.query.keyword as string;
 
     const result = await listUsers(limit, offset, Number(userId), keyword);
-    res.json({ status: 'success', ...result });
+    sendList(res, result);
   } catch (error) {
     next(error);
   }
@@ -24,7 +25,7 @@ export const getUser = async (req: Request, res: Response, next: NextFunction) =
     }
 
     const user = await getUserById(Number.parseInt(idParam, 10));
-    res.json({ status: 'success', data: user });
+    sendSuccess(res, user);
   } catch (error) {
     next(error);
   }
@@ -44,7 +45,7 @@ export const createUser = async (req: Request, res: Response, next: NextFunction
     if (!password?.trim()) throw new AppError('password is required', 400);
 
     const user = await addUser({ fullname, username, password, created_by, is_active });
-    res.status(201).json({ status: 'success', data: user });
+    sendSuccess(res, user, 201);
   } catch (error) {
     next(error);
   }
@@ -65,7 +66,7 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
     };
 
     const user = await editUser(Number.parseInt(idParam, 10), { fullname, password, is_active, updated_by });
-    res.json({ status: 'success', data: user });
+    sendSuccess(res, user);
   } catch (error) {
     next(error);
   }
@@ -81,7 +82,7 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
     const { deleted_by } = req.body as { deleted_by?: string };
 
     await removeUser(Number.parseInt(idParam, 10), deleted_by);
-    res.json({ status: 'success', message: 'User deleted' });
+    sendMessage(res, 'User deleted');
   } catch (error) {
     next(error);
   }
