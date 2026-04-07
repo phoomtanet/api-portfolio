@@ -78,10 +78,16 @@ export function setupSocket(httpServer: http.Server) {
 
   io.on('connection', (socket: Socket) => {
     const me = socket.data.user as JwtPayload | undefined;
+    console.log('Socket connected:', socket.id);
+    console.log('User data:', me);
 
     // ── USER: join own room ──────────────────────────────────────────────────
     socket.on('user_join', async () => {
-      if (!me || me.isAdmin) return;
+      console.log('user_join event received, me:', me);
+      if (!me || me.isAdmin) {
+        console.log('user_join rejected: !me or isAdmin');
+        return;
+      }
 
       const roomKey = `user:${me.username}`;
 
@@ -115,7 +121,11 @@ export function setupSocket(httpServer: http.Server) {
 
     // ── ADMIN: connect ───────────────────────────────────────────────────────
     socket.on('admin_join', async () => {
-      if (!me?.isAdmin) return;
+      console.log('admin_join event received, me:', me);
+      if (!me?.isAdmin) {
+        console.log('admin_join rejected: !me.isAdmin');
+        return;
+      }
 
       socket.join('admins');
 
