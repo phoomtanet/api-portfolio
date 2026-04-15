@@ -24,6 +24,7 @@ model user {
   is_admin   Boolean?       @default(false)
   chat_rooms chat_room[]
   sessions   user_session[]
+  restaurant_users restaurant_user[]
 }
 
 /// ห้องแชต 1 ห้องต่อ 1 user
@@ -96,4 +97,73 @@ model project {
   deleted_by      String?   @db.VarChar
   updated_at      DateTime? @db.Timestamp(6)
   updated_by      String?   @db.VarChar
+}
+
+
+
+
+
+model restaurant {
+  id              Int    @id @default(autoincrement())
+  restaurant_name_th String?   @db.VarChar
+  restaurant_name_en String?   @db.VarChar
+  is_active       Boolean?  @default(true)
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+  created_by      String?   @db.VarChar
+  deleted_at      DateTime? @db.Timestamp(6)
+  deleted_by      String?   @db.VarChar
+  updated_at      DateTime? @db.Timestamp(6)
+  updated_by      String?   @db.VarChar
+  restaurant_users restaurant_user[]
+  restaurant_menus restaurant_menu[]
+}
+
+model restaurant_menu {
+  id              Int    @id @default(autoincrement())
+  restaurant_id   Int?
+  menu_name_th    String?   @db.VarChar
+  menu_name_en    String?   @db.VarChar
+  menu_description_th String?   @db.VarChar
+  menu_description_en String?   @db.VarChar
+  menu_image      String?   @db.VarChar
+  is_active       Boolean?  @default(true)
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+  created_by      String?   @db.VarChar
+  deleted_at      DateTime? @db.Timestamp(6)
+  deleted_by      String?   @db.VarChar
+  updated_at      DateTime? @db.Timestamp(6)
+  updated_by      String?   @db.VarChar
+  Restaurant      restaurant? @relation(fields: [restaurant_id], references: [id])
+}
+
+
+model restaurant_user {
+  id              Int    @id @default(autoincrement())
+  restaurant_id   Int?
+  user_id         Int?
+  role_id         Int?
+  is_active       Boolean?  @default(true)
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+  created_by      String?   @db.VarChar
+  deleted_at      DateTime? @db.Timestamp(6)
+  deleted_by      String?   @db.VarChar
+  updated_at      DateTime? @db.Timestamp(6)
+  updated_by      String?   @db.VarChar
+  User            user?     @relation(fields: [user_id], references: [id])
+  Restaurant      restaurant? @relation(fields: [restaurant_id], references: [id])
+  Role            restaurant_role? @relation(fields: [role_id], references: [id])
+}
+
+
+model restaurant_role {
+  id              Int    @id @default(autoincrement())
+  role_name       String?   @db.VarChar
+  is_active       Boolean?  @default(true)
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+  created_by      String?   @db.VarChar
+  deleted_at      DateTime? @db.Timestamp(6)
+  deleted_by      String?   @db.VarChar
+  updated_at      DateTime? @db.Timestamp(6)
+  updated_by      String?   @db.VarChar
+  restaurant_users restaurant_user[]
 }

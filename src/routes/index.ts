@@ -4,6 +4,7 @@ import authRoute from './auth.route';
 import userRoute from './user.route';
 import projectRoute from './project.route';
 import uploadRoute from './upload.route';
+import restaurantRoute from './restaurant.route';
 
 const router = Router();
 
@@ -21,5 +22,6 @@ router.use(authRoute);
 router.use(userRoute);
 router.use(projectRoute);
 router.use(uploadRoute);
+router.use(restaurantRoute);
 
 export default router;
