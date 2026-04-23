@@ -142,3 +142,147 @@ export const createRestaurantForUser = async (userId: number, data: {
 
   return restaurant;
 };
+
+/* Menu related functions */
+
+const menuSelect = {
+  id: true,
+  restaurant_id: true,
+  menu_name_th: true,
+  menu_name_en: true,
+  menu_description_th: true,
+  menu_description_en: true,
+  menu_image: true,
+  is_active: true,
+  created_at: true,
+  created_by: true,
+  updated_at: true,
+  updated_by: true,
+  deleted_at: true,
+  deleted_by: true,
+} satisfies Prisma.restaurant_menuSelect;
+
+const notDeletedMenu: Prisma.restaurant_menuWhereInput = { deleted_at: null };
+
+/* Get menus by restaurant_id and user_id */
+export const getMenusByRestaurantId = async (userId: number, restaurantId: number, limit: number, offset: number) => {
+  // First verify user has access to this restaurant
+  const restaurant = await prisma.restaurant.findFirst({
+    where: {
+      id: restaurantId,
+      ...notDeleted,
+      is_active: true,
+      restaurant_users: {
+        some: {
+          user_id: userId,
+          is_active: true
+        }
+      }
+    }
+  });
+
+  if (!restaurant) {
+    throw new AppError('Restaurant not found or access denied', 404);
+  }
+
+  const where: Prisma.restaurant_menuWhereInput = {
+    ...notDeletedMenu,
+    is_active: true,
+    restaurant_id: restaurantId
+  };
+
+  const [total, menus] = await prisma.$transaction([
+    prisma.restaurant_menu.count({ where }),
+    prisma.restaurant_menu.findMany({
+      select: menuSelect,
+      where,
+      take: limit,
+      skip: offset,
+      orderBy: { id: 'asc' }
+    })
+  ]);
+
+  return { data: menus, total, limit, offset };
+};
+
+/* Get specific menu by restaurant_id and menu_id */
+export const getMenuByRestaurantIdAndMenuId = async (userId: number, restaurantId: number, menuId: number) => {
+  // Verify user has access to this restaurant
+  const restaurant = await prisma.restaurant.findFirst({
+    where: {
+      id: restaurantId,
+      ...notDeleted,
+      is_active: true,
+      restaurant_users: {
+        some: {
+          user_id: userId,
+          is_active: true
+        }
+      }
+    }
+  });
+
+  if (!restaurant) {
+    throw new AppError('Restaurant not found or access denied', 404);
+  }
+
+  const menu = await prisma.restaurant_menu.findFirst({
+    select: menuSelect,
+    where: {
+      id: menuId,
+      restaurant_id: restaurantId,
+      ...notDeletedMenu,
+      is_active: true
+    }
+  });
+
+  if (!menu) {
+    throw new AppError('Menu not found', 404);
+  }
+
+  return menu;
+};
+
+/* Create menu for restaurant */
+export const createMenuForRestaurant = async (userId: number, restaurantId: number, data: {
+  menu_name_th?: string;
+  menu_name_en?: string;
+  menu_description_th?: string;
+  menu_description_en?: string;
+  menu_image?: string;
+  created_by?: string;
+}) => {
+  // Verify user has access to this restaurant
+  const restaurant = await prisma.restaurant.findFirst({
+    where: {
+      id: restaurantId,
+      ...notDeleted,
+      is_active: true,
+      restaurant_users: {
+        some: {
+          user_id: userId,
+          is_active: true
+        }
+      }
+    }
+  });
+
+  if (!restaurant) {
+    throw new AppError('Restaurant not found or access denied', 404);
+  }
+
+  const menu = await prisma.restaurant_menu.create({
+    select: menuSelect,
+    data: {
+      restaurant_id: restaurantId,
+      menu_name_th: data.menu_name_th?.trim() ?? null,
+      menu_name_en: data.menu_name_en?.trim() ?? null,
+      menu_description_th: data.menu_description_th?.trim() ?? null,
+      menu_description_en: data.menu_description_en?.trim() ?? null,
+      menu_image: data.menu_image?.trim() ?? null,
+      created_by: data.created_by ?? userId.toString()
+    }
+  });
+
+  return menu;
+};

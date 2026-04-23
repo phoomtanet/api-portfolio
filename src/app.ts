@@ -16,6 +16,7 @@ app.use(cors({
     'http://localhost:3000',
     'http://localhost:3001',
     'https://phoomtanet-web-portfolio.vercel.app',
+    'http://35.198.235.25:3000/login'
   ],
   credentials: true,
 }));
