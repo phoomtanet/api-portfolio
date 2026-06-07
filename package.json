@@ -12,7 +12,8 @@
     "prisma:migrate": "npx prisma migrate dev",
     "prisma:db:pull": "npx prisma db pull",
     "prisma:db:push": "npx prisma db push",
-    "prisma:studio": "npx prisma studio"
+    "prisma:studio": "npx prisma studio",
+    "seed:rag": "ts-node --transpile-only --project tsconfig.seed.json create-rag-data.ts"
   },
   "keywords": [
     "node",
@@ -25,8 +26,10 @@
   "license": "MIT",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1004.0",
+    "@google/generative-ai": "^0.24.1",
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
+    "@qdrant/js-client-rest": "^1.9.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
